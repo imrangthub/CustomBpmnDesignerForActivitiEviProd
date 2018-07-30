@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+
+    <!-- required modeler styles -->
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@2.3.0/dist/assets/diagram-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@2.3.0/dist/assets/bpmn-font/css/bpmn.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	
+
+	<script src="jquery.js"></script>
+    <script src="bpmn-properties.js"></script>
+    <!-- modeler distro -->
+    <script src="development.js"></script>
+
+    <!-- needed for this example only -->
+    
+
+    <!-- example styles -->
+    <style>
+      html, body, #canvas {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      .diagram-note {
+        background-color: rgba(66, 180, 21, 0.7);
+        color: White;
+        border-radius: 5px;
+        font-family: Arial;
+        font-size: 12px;
+        padding: 5px;
+        min-height: 16px;
+        width: 50px;
+        text-align: center;
+      }
+      .needs-discussion:not(.djs-connection) .djs-visual > :nth-child(1) {
+        stroke: rgba(66, 180, 21, 0.7) !important; /* color elements as red */
+      }
+      #save-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+      }
+      .custom-properties{
+      	position: fixed;
+		top: 0px;
+		right: 0px;
+		width: 20%;
+		background-color: #fafafa;
+		height: 100%;
+		border: 3px outset #CCC;
+		border-radius: 5px;
+      }
+      .box-title{
+      	background-color: #fafafa;
+		width: : 100%;
+		border: solid 1px #CCC;
+		border-radius: 2px;
+      }
+      .btn-group{
+		top: 20px;
+		right: 285%;
+      }
+      table{
+      	margin-top: 50px;
+		padding: 12px;
+		border: 2px outset #CCC;
+		width: 100%;
+		border-radius: 5px;
+      }
+      table tr{
+      	
+      }
+      table caption{
+      	border: 2px outset #6F5C5CCC;
+		border-radius: 5px;
+		font-size: 19px;
+		font-family: inherit;
+      }
+      table tr td button{
+      	border: 2px outset #6F5C5CCC;
+		border-radius: 4px;
+      }
+      .custom-properties-title{
+      	border: 2px outset #6F5C5CCC;
+		border-radius: 5px;
+		font-size: 22px;
+		height: 34px;
+		padding-left: 20px;
+		padding-top: 1px;
+      }
+      .align-right{
+      	text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+
+  		<div id="canvas" ></div>
+  			
+    	<div id="custom-properties" class="custom-properties">
+    		<div style="margin-top: -22px;">
+    			<p class="custom-properties-title">Properties</p>
+    		</div>
+
+    			<div>
+    				<table>
+    					<!-- Dynamic Body-->
+    				</table>
+    			</div>
+    			
+  			</div>
+
+  			<div class="io-import-export">
+
+    <ul class="io-import io-control io-control-list io-horizontal">
+      <li>
+        <button title="open BPMN diagram from local file system" jsaction="click:bio.openLocal">
+          <span><i class="fa fa-folder-open" aria-hidden="true"></i></span>
+        </button>
+      </li>
+      <li class="vr" style="margin-left: 2px"></li>
+      <li>
+        <button title="Compile Diagram" jsaction="click:bio.createNew">
+          <span><i class="fa fa-cogs" aria-hidden="true"></i></span>
+        </button>
+      </li>
+    </ul>
+
+    
+    
+
+    <ul class="io-import io-control io-control-list io-horizontal">
+      <li>
+        <button title="reset zoom" id="reset-canvas">
+          <span><i class="fa fa-compass" aria-hidden="true"></i></span>
+        </button>
+      </li>
+    </ul>
+
+    <ul class="io-import io-control io-control-list io-horizontal">
+      <li>
+        <button title="zoom in" id="zoom-in-canvas">
+          <span><i class="fa fa-search-plus" aria-hidden="true"></i>
+</span>
+        </button>
+      </li>
+      <li>
+      	<li class="vr" style="margin-left: 2px"></li>
+      </li>
+      <li>
+        <button title="zoom out" id="zoom-out-canvas">
+          <span ><i class="fa fa-search-minus" aria-hidden="true"></i>
+</span>
+        </button>
+      </li>
+    </ul>
+    
+  </div>
+
+
+
+    <!-- <button id="save-button">print to console</button> -->
+
+    <script>
+      //var diagramUrl = 'https://cdn.rawgit.com/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
+      // modeler instance
+      var bpmnModeler = new BpmnJS({
+        container: '#canvas',
+        keyboard: {
+          bindTo: window
+        }
+      });
+      /**
+       * Save diagram contents and print them to the console.
+       */
+
+
+       var __renderedXML;
+      function exportDiagram() {
+        bpmnModeler.saveXML({ format: true }, function(err, xml) {
+          if (err) {
+            return console.error('could not Render BPMN 2.0 diagram', err);
+          }
+          console.log('DIAGRAM', xml);
+          __renderedXML = xml;
+          alert("Render Successfull");
+        });
+      }
+      /**
+       * Open diagram in our modeler instance.
+       *
+       * @param {String} bpmnXML diagram to display
+       */
+      function openDiagram(bpmnXML) {
+        // import diagram
+        bpmnModeler.importXML(bpmnXML, function(err) {
+          if (err) {
+            return console.error('could not import BPMN 2.0 diagram', err);
+          }
+          // access modeler components
+          var canvas = bpmnModeler.get('canvas');
+          var overlays = bpmnModeler.get('overlays');
+          // zoom to fit full viewport
+          canvas.zoom('fit-viewport');
+          // attach an overlay to a node
+          overlays.add('SCAN_OK', 'note', {
+            position: {
+              bottom: 0,
+              right: 0
+            },
+            html: '<div class="diagram-note">Mixed up the labels?</div>'
+          });
+          // add marker
+          canvas.addMarker('SCAN_OK', 'needs-discussion');
+        });
+      }
+      // load external diagram file via AJAX and open it
+      //$.get(diagramUrl, openDiagram, 'text');
+      var initDiagram =
+	  '<?xml version="1.0" encoding="UTF-8"?>'+
+'<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/'+
+'XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" '+
+'xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"'+
+'xmlns:di="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" '+
+'expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">'+
+  '<process id="oneTaskProcess" name="the one task process" isExecutable="true">'+
+    '<startEvent id="startEvent" name="Start"></startEvent>'+
+    '<userTask id="Task1" name="firstStage" activiti:assignee="${person.id}"></userTask>'+
+    '<sequenceFlow id="flow1" sourceRef="startEvent" targetRef="Task1"></sequenceFlow>'+
+    '<exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>'+
+    '<sequenceFlow id="flow2" sourceRef="Task1" targetRef="exclusivegateway1"></sequenceFlow>'+
+    '<userTask id="task2" name="SecondStage"></userTask>'+
+    '<sequenceFlow id="flow4" sourceRef="exclusivegateway1" targetRef="task2">'+
+      '<conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvedTaskA==true}]]></conditionExpression>'+
+    '</sequenceFlow>'+
+    '<exclusiveGateway id="exclusivegateway2" name="Exclusive Gateway"></exclusiveGateway>'+
+    '<sequenceFlow id="flow5" sourceRef="task2" targetRef="exclusivegateway2"></sequenceFlow>'+
+    '<endEvent id="endevent2" name="End"></endEvent>'+
+    '<sequenceFlow id="flow6" sourceRef="exclusivegateway2" targetRef="endevent2">'+
+      '<conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvedTaskB==true}]]></conditionExpression>'+
+    '</sequenceFlow>'+
+    '<userTask id="usertask1" name="Third Stage"></userTask>'+
+    '<sequenceFlow id="flow7" sourceRef="exclusivegateway2" targetRef="usertask1"></sequenceFlow>'+
+    '<endEvent id="endevent3" name="End"></endEvent>'+
+    '<sequenceFlow id="flow8" sourceRef="usertask1" targetRef="endevent3">'+
+      
+    '</sequenceFlow>'+
+    '<serviceTask id="servicetask1" name="Service Task" activiti:expression="${write.writeMessage()}"></serviceTask>'+
+    '<sequenceFlow id="flow9" sourceRef="exclusivegateway1" targetRef="servicetask1">'+
+      '<conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvedTaskA==false}]]></conditionExpression>'+
+    '</sequenceFlow>'+
+    '<endEvent id="endevent4" name="End"></endEvent>'+
+    '<sequenceFlow id="flow10" sourceRef="servicetask1" targetRef="endevent4"></sequenceFlow>'+
+  '</process>'+
+  '<bpmndi:BPMNDiagram id="BPMNDiagram_oneTaskProcess">'+
+    '<bpmndi:BPMNPlane bpmnElement="oneTaskProcess" id="BPMNPlane_oneTaskProcess">'+
+      '<bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">'+
+        '<dc:Bounds height="35.0" width="35.0" x="50.0" y="190.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="Task1" id="BPMNShape_Task1">'+
+        '<dc:Bounds height="55.0" width="105.0" x="130.0" y="180.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="exclusivegateway1" id="BPMNShape_exclusivegateway1">'+
+        '<dc:Bounds height="40.0" width="40.0" x="280.0" y="188.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="task2" id="BPMNShape_task2">'+
+        '<dc:Bounds height="55.0" width="105.0" x="365.0" y="300.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="exclusivegateway2" id="BPMNShape_exclusivegateway2">'+
+        '<dc:Bounds height="40.0" width="40.0" x="515.0" y="308.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">'+
+        '<dc:Bounds height="35.0" width="35.0" x="600.0" y="311.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">'+
+        '<dc:Bounds height="55.0" width="105.0" x="590.0" y="420.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="endevent3" id="BPMNShape_endevent3">'+
+        '<dc:Bounds height="35.0" width="35.0" x="740.0" y="430.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">'+
+        '<dc:Bounds height="55.0" width="105.0" x="460.0" y="180.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNShape bpmnElement="endevent4" id="BPMNShape_endevent4">'+
+        '<dc:Bounds height="35.0" width="35.0" x="610.0" y="190.0"></dc:Bounds>'+
+      '</bpmndi:BPMNShape>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">'+
+        '<di:waypoint x="85.0" y="207.0"></di:waypoint>'+
+        '<di:waypoint x="130.0" y="207.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">'+
+        '<di:waypoint x="235.0" y="207.0"></di:waypoint>'+
+        '<di:waypoint x="280.0" y="208.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">'+
+        '<di:waypoint x="300.0" y="228.0"></di:waypoint>'+
+        '<di:waypoint x="300.0" y="327.0"></di:waypoint>'+
+        '<di:waypoint x="365.0" y="327.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">'+
+        '<di:waypoint x="470.0" y="327.0"></di:waypoint>'+
+        '<di:waypoint x="515.0" y="328.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">'+
+        '<di:waypoint x="555.0" y="328.0"></di:waypoint>'+
+        '<di:waypoint x="600.0" y="328.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">'+
+        '<di:waypoint x="535.0" y="348.0"></di:waypoint>'+
+        '<di:waypoint x="535.0" y="447.0"></di:waypoint>'+
+        '<di:waypoint x="590.0" y="447.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+     '<bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">'+
+        '<di:waypoint x="695.0" y="447.0"></di:waypoint>'+
+        '<di:waypoint x="740.0" y="447.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">'+
+        '<di:waypoint x="320.0" y="208.0"></di:waypoint>'+
+        '<di:waypoint x="460.0" y="207.0"></di:waypoint>'+
+      '</bpmndi:BPMNEdge>'+
+      '<bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">'+
+        '<di:waypoint x="565.0" y="207.0"></di:waypoint>'+
+        '<di:waypoint x="610.0" y="207.0"></di:waypoint>'+
+     '</bpmndi:BPMNEdge>'+
+    '</bpmndi:BPMNPlane>'+
+  '</bpmndi:BPMNDiagram>'+
+'</definitions>';
+      openDiagram(initDiagram);
+
+      $('.bjs-powered-by').remove();
+
+      $('#zoom-in-canvas').click(function(event) {
+      	event.preventDefault();
+      	var zoom = bpmnModeler.get('zoomScroll');
+      	zoom.stepZoom(1);
+      });
+
+      $('#zoom-out-canvas').click(function(event) {
+      	event.preventDefault();
+      	console.log("working");
+      	var zoom = bpmnModeler.get('zoomScroll');
+      	zoom.stepZoom(-1);
+      });
+
+      $('#reset-canvas').click(function(event) {
+      	event.preventDefault();
+      	var canvas = bpmnModeler.get('canvas');
+      	canvas.zoom('fit-viewport');
+      });
+
+      // wire save button
+      $('#save-button').click(exportDiagram);
+    </script>
+    <!--
+      Thanks for trying out our BPMN toolkit!
+      This example uses the pre-built distribution of the bpmn-js modeler.
+      Consider rolling your own distribution to have more flexibility
+      regarding which features to include.
+      Checkout our advanced examples section to learn more:
+      * https://github.com/bpmn-io/bpmn-js-examples#advanced
+      To get a bit broader overview over how bpmn-js works,
+      follow our walkthrough:
+      * https://bpmn.io/toolkit/bpmn-js/walkthrough/
+      Related starters:
+      * https://raw.githubusercontent.com/bpmn-io/bpmn-js-examples/starter/viewer.html
+    -->
+  </body>
+</html>
